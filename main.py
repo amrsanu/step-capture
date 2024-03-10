@@ -16,6 +16,7 @@ from docx.shared import Inches
 from app import Ui_Form
 from captureWindow import select_window
 
+# Create a folder to store screenshots with a timestamp as its name
 FOLDER_NAME = f'step-Capture-{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
 FOLDER_NAME = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), FOLDER_NAME)
@@ -47,16 +48,25 @@ class MainWindow(QWidget, QObject):
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
     def setup_ui_events(self):
+        """
+        Set up UI events.
+        """
         self.ui.selectAreaPushButton.clicked.connect(self.select_area)
         self.ui.startCapturePushButton.clicked.connect(self.start_capture)
         self.ui.createDocumentPushButton.clicked.connect(self.create_document)
 
     def select_area(self):
+        """
+        Select the area on the screen for capture.
+        """
         print("Select Area button clicked")
         self.capture_area = select_window()
         print(f"Area: {self.capture_area}")
 
     def start_capture(self):
+        """
+        Start capturing screenshots.
+        """
         print("Start Capture button clicked")
         try:
             self.mouseListener = mouse.Listener(on_click=self.on_click)
@@ -69,12 +79,18 @@ class MainWindow(QWidget, QObject):
             print(f"Start Capture Error: {ex}")
 
     def on_click(self, x, y, button, pressed):
+        """
+        Handle mouse clicks to capture screenshots.
+        """
         if self.take_screenshot and pressed and self.is_within_capture_area(x, y):
             print(
                 f"Save capture state - {self.capture_area} - Ctrl+Clicks pressed")
             self.screenshot()
 
     def screenshot(self):
+        """
+        Capture a screenshot of the selected area.
+        """
         # Get the screen geometry
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = os.path.join(FOLDER_NAME,  f"screenshot_{timestamp}.png")
@@ -87,10 +103,16 @@ class MainWindow(QWidget, QObject):
         print("Screenshot saved as screenshot.png")
 
     def is_within_capture_area(self, x, y):
+        """
+        Check if the mouse click is within the capture area.
+        """
         (x1, y1), (x2, y2) = self.capture_area
         return x1 <= x <= x2 and y1 <= y <= y2
 
     def create_document(self):
+        """
+        Create a Word document with captured screenshots.
+        """
         print("Create Document button clicked")
         self.take_screenshot = False
         self.mouseListener.stop()
