@@ -18,3 +18,14 @@ The application window will appear on top of other windows on your desktop.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## TODO
+
+- Help, what to do next?
+- Button click update
+- Save docx on every capture
+- Not to include the first click
+- Heading to Paragraph
+- Start Pause
+- Minimize the app on start capture
+- Can add border [Optional]

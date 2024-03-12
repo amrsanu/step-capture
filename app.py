@@ -10,6 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -26,7 +27,6 @@ class Ui_Form(object):
         self.createDocumentPushButton.setGeometry(
             QtCore.QRect(240, 10, 141, 24))
         self.createDocumentPushButton.setObjectName("createDocumentPushButton")
-
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 

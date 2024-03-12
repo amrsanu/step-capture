@@ -7,6 +7,7 @@ import datetime
 
 import pyautogui
 from PyQt5 import QtWidgets
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import QObject, Qt
 from pynput import mouse
@@ -16,10 +17,8 @@ from docx.shared import Inches
 from app import Ui_Form
 from captureWindow import select_window
 
-# Create a folder to store screenshots with a timestamp as its name
-FOLDER_NAME = f'step-Capture-{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
-FOLDER_NAME = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), FOLDER_NAME)
+HOME_DIRECTORY = os.path.join(
+    os.path.expanduser("~\\Documents"), "StepCapture")
 
 
 def ensure_directory(directory):
@@ -40,12 +39,15 @@ class MainWindow(QWidget, QObject):
         self.ui.setupUi(self)
         self.setup_ui_events()
         self.setMouseTracking(True)
-
+        self.mouseListener = None
+        self.home_directory = None
         self.capture_area = None
         self.take_screenshot = False
-        ensure_directory(FOLDER_NAME)
+        ensure_directory(HOME_DIRECTORY)
+
         # Set the window flag to keep the window on top
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setWindowIcon(QIcon('./stepCapture.ico'))
 
     def setup_ui_events(self):
         """
@@ -63,6 +65,11 @@ class MainWindow(QWidget, QObject):
         self.capture_area = select_window()
         print(f"Area: {self.capture_area}")
 
+        # Create a folder to store screenshots with a timestamp as its name
+        timestamp = f'step-Capture-{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+        self.home_directory = os.path.join(HOME_DIRECTORY, timestamp)
+        ensure_directory(self.home_directory)
+
     def start_capture(self):
         """
         Start capturing screenshots.
@@ -70,8 +77,6 @@ class MainWindow(QWidget, QObject):
         print("Start Capture button clicked")
         try:
             self.mouseListener = mouse.Listener(on_click=self.on_click)
-
-            self.alt_pressed = False
             self.mouseListener.start()
             print("Take capture from window")
             self.take_screenshot = True
@@ -93,14 +98,13 @@ class MainWindow(QWidget, QObject):
         """
         # Get the screen geometry
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = os.path.join(FOLDER_NAME,  f"screenshot_{timestamp}.png")
+        filename = os.path.join(self.home_directory,
+                                f"screenshot_{timestamp}.png")
         (x1, y1), (x2, y2) = self.capture_area
         width = x2 - x1
         height = y2 - y1
         screenshot = pyautogui.screenshot(region=(x1, y1, width, height))
         screenshot.save(filename)
-
-        print("Screenshot saved as screenshot.png")
 
     def is_within_capture_area(self, x, y):
         """
@@ -118,18 +122,22 @@ class MainWindow(QWidget, QObject):
         self.mouseListener.stop()
 
         doc = Document()
-        doc.add_heading('Document with Images', level=1)
-        doc.add_paragraph("This document contains images.")
+        doc.add_heading('Main Heading [EDIT]', level=1)
+        doc.add_paragraph("Follow below steps to....")
+        doc.add_paragraph("...")
         image_files = []  # List of image file paths
-        for image in os.listdir(FOLDER_NAME):
+        for image in os.listdir(self.home_directory):
             if image.endswith('png'):
-                image_files.append(os.path.join(FOLDER_NAME, image))
+                image_files.append(os.path.join(self.home_directory, image))
         for image_file in image_files:
             # Adjust width as needed
-            doc.add_heading(os.path.basename(image_file), level=2)
+            doc.add_paragraph("")
+            doc.add_paragraph(os.path.basename(image_file))
             doc.add_picture(image_file, width=Inches(5))
         # Save the document
-        doc.save(f'{FOLDER_NAME}.docx')
+        doc.save(
+            f'{os.path.join(self.home_directory, os.path.basename(self.home_directory))}.docx')
+        os.startfile(self.home_directory)
 
 
 if __name__ == "__main__":

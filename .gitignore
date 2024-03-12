@@ -2,3 +2,6 @@ __pycache__
 venv
 step-Capture*
 *.docx
+build
+.vscode/settings.json
+main.spec
