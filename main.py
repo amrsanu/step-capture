@@ -20,6 +20,21 @@ from captureWindow import select_window
 HOME_DIRECTORY = os.path.join(
     os.path.expanduser("~\\Documents"), "StepCapture")
 
+DISABLE_BUTTON_STYLE = '''
+        QPushButton {
+            color: #808080;  /* Grey text color */
+            background-color: #f0f0f0;  /* Light grey background */
+            border: 1px solid #d3d3d3;  /* Light grey border */
+            border-radius: 5px;  /* Rounded corners */
+            padding: 5px 10px;  /* Padding */
+        }
+        QPushButton:disabled {
+            color: #b0b0b0;  /* Darker grey text color for disabled state */
+            background-color: #e0e0e0;  /* Lighter grey background for disabled state */
+            border: 1px solid #d3d3d3;  /* Light grey border for disabled state */
+        }
+    '''
+
 
 def ensure_directory(directory):
     """
@@ -43,11 +58,12 @@ class MainWindow(QWidget, QObject):
         self.home_directory = None
         self.capture_area = None
         self.take_screenshot = False
+        self.doc = None
         ensure_directory(HOME_DIRECTORY)
 
         # Set the window flag to keep the window on top
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.setWindowIcon(QIcon('./stepCapture.ico'))
+        self.setWindowIcon(QIcon('D:\dev\dev.py\step-capture\stepCapture.ico'))
 
     def setup_ui_events(self):
         """
@@ -61,14 +77,16 @@ class MainWindow(QWidget, QObject):
         """
         Select the area on the screen for capture.
         """
+        # self.ui.selectAreaPushButton.setStyleSheet(DISABLE_BUTTON_STYLE)
+        self.ui.logLineEdit.setText(
+            "Click TopRight > BottomLeft corner of Capture window.")
+        self.ui.logLineEdit.repaint()
         print("Select Area button clicked")
         self.capture_area = select_window()
         print(f"Area: {self.capture_area}")
 
-        # Create a folder to store screenshots with a timestamp as its name
-        timestamp = f'step-Capture-{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
-        self.home_directory = os.path.join(HOME_DIRECTORY, timestamp)
-        ensure_directory(self.home_directory)
+        self.ui.logLineEdit.setText(
+            "Click click Start Capture, or Select Area to select again.")
 
     def start_capture(self):
         """
@@ -78,8 +96,14 @@ class MainWindow(QWidget, QObject):
         try:
             self.mouseListener = mouse.Listener(on_click=self.on_click)
             self.mouseListener.start()
+            self.create_document()
             print("Take capture from window")
             self.take_screenshot = True
+            self.ui.startCapturePushButton.setEnabled(False)
+            # self.ui.startCapturePushButton.setStyleSheet(DISABLE_BUTTON_STYLE)
+            self.ui.logLineEdit.setText(
+                "Click inside selected area to capture.")
+
         except Exception as ex:
             print(f"Start Capture Error: {ex}")
 
@@ -104,7 +128,10 @@ class MainWindow(QWidget, QObject):
         width = x2 - x1
         height = y2 - y1
         screenshot = pyautogui.screenshot(region=(x1, y1, width, height))
+        self.doc.add_paragraph("")
+        self.doc.add_paragraph(os.path.basename(filename))
         screenshot.save(filename)
+        self.doc.add_picture(filename, width=Inches(5))
 
     def is_within_capture_area(self, x, y):
         """
@@ -117,27 +144,44 @@ class MainWindow(QWidget, QObject):
         """
         Create a Word document with captured screenshots.
         """
-        print("Create Document button clicked")
-        self.take_screenshot = False
-        self.mouseListener.stop()
+        if self.doc is None:
+            print("Create Document button clicked")
 
-        doc = Document()
-        doc.add_heading('Main Heading [EDIT]', level=1)
-        doc.add_paragraph("Follow below steps to....")
-        doc.add_paragraph("...")
-        image_files = []  # List of image file paths
-        for image in os.listdir(self.home_directory):
-            if image.endswith('png'):
-                image_files.append(os.path.join(self.home_directory, image))
-        for image_file in image_files:
-            # Adjust width as needed
-            doc.add_paragraph("")
-            doc.add_paragraph(os.path.basename(image_file))
-            doc.add_picture(image_file, width=Inches(5))
+            # Create a folder to store screenshots with a timestamp as its name
+            timestamp = f'step-Capture-{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+            self.home_directory = os.path.join(HOME_DIRECTORY, timestamp)
+            ensure_directory(self.home_directory)
+
+            self.doc = Document()
+            self.doc.add_heading('Main Heading [EDIT]', level=1)
+            self.doc.add_paragraph("Follow below steps to....")
+            self.doc.add_paragraph("...")
+            self.ui.createDocumentPushButton.setText("Save Document")
+            self.ui.logLineEdit.setText(
+                "Click Save Document to save and start new.")
+        else:
+            print("Save Document button clicked")
+            self.take_screenshot = False
+            self.mouseListener.stop()
+            self.doc.save(
+                f'{os.path.join(self.home_directory, os.path.basename(self.home_directory))}.docx')
+            self.doc = None
+            self.ui.startCapturePushButton.setEnabled(True)
+            # self.ui.startCapturePushButton.setStyleSheet(DISABLE_BUTTON_STYLE)
+            self.ui.createDocumentPushButton.setText("Create Document")
+            self.ui.logLineEdit.setText(
+                "Select new area or start capture to start new.")
+
+    def closeEvent(self, event):
+        # Stop the mouse listener when the window is closed
+        print("Closing the window.")
         # Save the document
-        doc.save(
-            f'{os.path.join(self.home_directory, os.path.basename(self.home_directory))}.docx')
-        os.startfile(self.home_directory)
+        if self.doc is not None:
+            self.doc.save(
+                f'{os.path.join(self.home_directory, os.path.basename(self.home_directory))}.docx')
+        event.accept()
+        if self.home_directory:
+            os.startfile(self.home_directory)
 
 
 if __name__ == "__main__":

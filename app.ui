@@ -7,23 +7,23 @@
     <x>0</x>
     <y>0</y>
     <width>393</width>
-    <height>46</height>
+    <height>66</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>393</width>
-    <height>46</height>
+    <height>66</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>393</width>
-    <height>46</height>
+    <height>66</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>StepCapture</string>
   </property>
   <widget class="QPushButton" name="selectAreaPushButton">
    <property name="geometry">
@@ -62,6 +62,16 @@
    </property>
    <property name="text">
     <string>Create Document</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="logLineEdit">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>371</width>
+     <height>22</height>
+    </rect>
    </property>
   </widget>
  </widget>
